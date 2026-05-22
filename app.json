@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "GigProfit",
+    "slug": "gigprofit",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0c10"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gigprofit.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "GigProfit uses your location to track mileage automatically."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0c10"
+      },
+      "package": "com.gigprofit.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "name": "GigProfit",
+      "shortName": "GigProfit",
+      "lang": "en",
+      "themeColor": "#00e5a0",
+      "backgroundColor": "#0a0c10"
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "gigprofit-app"
+      }
+    }
+  }
+}
