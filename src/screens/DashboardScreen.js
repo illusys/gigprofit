@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 import { computeStats, fmt, fmtMi, profitColor } from '../utils/calculations';
+import { api } from '../services/api';
 import { colors, spacing, radius } from '../utils/theme';
 import {
   StatCard,
@@ -25,13 +26,13 @@ import {
 const PERIODS = ['day', 'week', 'month', 'year'];
 
 export default function DashboardScreen() {
-  const { trips, vehicle, period, setPeriod } = useApp();
+  const { trips, vehicle, taxSettings, period, setPeriod } = useApp();
   const [aiTip, setAiTip] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
 
   const stats = useMemo(
-    () => computeStats(trips, vehicle, period),
-    [trips, vehicle, period]
+    () => computeStats(trips, vehicle, period, taxSettings),
+    [trips, vehicle, period, taxSettings]
   );
 
   // 7-day chart data
@@ -69,23 +70,8 @@ Gig driver weekly stats:
 - Trips: ${stats.totalTrips}
 - Vehicle MPG: ${vehicle.mpg}, Fuel: $${vehicle.fuelPrice}/gal
 `;
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 300,
-          messages: [
-            {
-              role: 'user',
-              content: `You are a financial coach for gig drivers. Give exactly 2 short, specific, actionable tips to improve profitability based on this data. Be direct, practical, no fluff. Keep total response under 120 words.\n\n${summary}`,
-            },
-          ],
-        }),
-      });
-      const data = await res.json();
-      const text = data.content?.map((b) => b.text || '').join('') || 'No tips available.';
-      setAiTip(text);
+      const data = await api.aiCoach(`You are a financial coach for gig drivers. Give exactly 2 short, specific, actionable tips to improve profitability based on this data. Be direct, practical, no fluff. Keep total response under 120 words.\n\n${summary}`);
+      setAiTip(data.tip || 'No tips available.');
     } catch {
       setAiTip('Could not connect. Check your internet connection.');
     }
@@ -222,7 +208,7 @@ Gig driver weekly stats:
               <Text style={[styles.taxValue, { color: colors.accent }]}>{fmt(stats.mileageDeduction)}</Text>
             </View>
           </Row>
-          <Text style={styles.taxNote}>67¢/mi IRS rate · SE tax + income tax estimate</Text>
+          <Text style={styles.taxNote}>{Math.round((stats.taxSettings?.mileageRate || 0) * 100)}¢/mi mileage rate · configurable tax estimate</Text>
         </Card>
 
         {/* Alerts */}

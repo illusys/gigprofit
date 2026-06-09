@@ -1,0 +1,16 @@
+const express = require('express');
+const c = require('../controllers/adminController');
+const { authenticate, requireAdmin, requireSuperAdmin } = require('../middleware/auth');
+const router = express.Router();
+router.use(authenticate, requireAdmin);
+router.get('/metrics', c.metrics);
+router.get('/users', c.listUsers);
+router.post('/users', c.createUser);
+router.put('/users/:id', c.updateUser);
+router.delete('/users/:id', c.deleteUser);
+router.post('/users/:id/reset-password', c.resetUserPassword);
+router.get('/reports', c.reports);
+router.get('/audit-logs', c.auditLogs);
+router.get('/settings', c.settings);
+router.put('/settings/:key', requireSuperAdmin, c.updateSetting);
+module.exports = router;

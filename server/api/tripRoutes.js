@@ -1,0 +1,11 @@
+const express = require('express');
+const c = require('../controllers/tripController');
+const { authenticate } = require('../middleware/auth');
+const { requireFields } = require('../middleware/validate');
+const router = express.Router();
+router.use(authenticate);
+router.get('/', c.listTrips);
+router.post('/', requireFields(['date', 'platform', 'miles', 'gross']), c.createTrip);
+router.put('/:id', requireFields(['date', 'platform', 'miles', 'gross']), c.updateTrip);
+router.delete('/:id', c.deleteTrip);
+module.exports = router;

@@ -1,0 +1,14 @@
+const bcrypt = require('bcryptjs');
+const { validatePasswordStrength } = require('./validationService');
+
+const SALT_ROUNDS = 12;
+
+async function hashPassword(password) {
+  return bcrypt.hash(password, SALT_ROUNDS);
+}
+
+async function verifyPassword(password, passwordHash) {
+  return bcrypt.compare(password, passwordHash);
+}
+
+module.exports = { validatePasswordStrength, hashPassword, verifyPassword };

@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+  DELETED
+}
+
+enum ReportType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  firstName          String
+  lastName           String
+  email              String              @unique
+  phone              String?
+  passwordHash       String
+  role               Role                @default(USER)
+  status             UserStatus          @default(PENDING_VERIFICATION)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  lastLogin          DateTime?
+  profile            UserProfile?
+  trips              Trip[]              @relation("TripOwner")
+  createdTrips       Trip[]              @relation("TripCreatedBy")
+  updatedTrips       Trip[]              @relation("TripUpdatedBy")
+  reports            Report[]
+  refreshTokens      RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  auditLogs          AuditLog[]          @relation("AuditActor")
+  subscriptions      UserSubscription[]
+}
+
+model UserProfile {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatarUrl            String?
+  vehicleSettings      Json     @default("{}")
+  preferences          Json     @default("{}")
+  notificationSettings Json     @default("{}")
+  taxSettings          Json     @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Trip {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("TripOwner", fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  platform  String
+  miles     Float
+  hours     Float    @default(0)
+  gross     Float
+  tolls     Float    @default(0)
+  parking   Float    @default(0)
+  note      String?
+  createdBy String?
+  creator   User?    @relation("TripCreatedBy", fields: [createdBy], references: [id])
+  updatedBy String?
+  updater   User?    @relation("TripUpdatedBy", fields: [updatedBy], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
+  @@index([platform])
+}
+
+model Report {
+  reportId      String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reportType    ReportType
+  generatedDate DateTime   @default(now())
+  jsonData      Json
+  createdAt     DateTime   @default(now())
+
+  @@index([userId, reportType, generatedDate])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String?
+  timestamp  DateTime @default(now())
+  ipAddress  String?
+  metadata   Json     @default("{}")
+
+  @@index([actorId, timestamp])
+  @@index([action])
+  @@index([entityType])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model SubscriptionPlan {
+  id           String             @id @default(cuid())
+  name         String             @unique
+  monthlyPrice Decimal            @db.Decimal(10, 2)
+  yearlyPrice  Decimal            @db.Decimal(10, 2)
+  features     Json               @default("[]")
+  isActive     Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId    String
+  plan      SubscriptionPlan   @relation(fields: [planId], references: [id])
+  status    SubscriptionStatus @default(TRIALING)
+  startsAt  DateTime           @default(now())
+  endsAt    DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([userId])
+}

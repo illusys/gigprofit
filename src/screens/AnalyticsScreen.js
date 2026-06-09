@@ -22,11 +22,11 @@ const EXPENSE_COLORS = {
 };
 
 export default function AnalyticsScreen() {
-  const { trips, vehicle, period } = useApp();
+  const { trips, vehicle, taxSettings, period } = useApp();
 
   const stats = useMemo(
-    () => computeStats(trips, vehicle, period),
-    [trips, vehicle, period]
+    () => computeStats(trips, vehicle, period, taxSettings),
+    [trips, vehicle, period, taxSettings]
   );
 
   const platformList = Object.entries(stats.byPlatform)
@@ -51,6 +51,8 @@ export default function AnalyticsScreen() {
     ...(stats.expenses?.loan > 0
       ? [{ key: 'loan', label: 'Loan/Lease', value: stats.expenses.loan }]
       : []),
+    ...(stats.expenses?.tolls > 0 ? [{ key: 'tolls', label: 'Tolls', value: stats.expenses.tolls }] : []),
+    ...(stats.expenses?.parking > 0 ? [{ key: 'parking', label: 'Parking', value: stats.expenses.parking }] : []),
   ].sort((a, b) => b.value - a.value);
 
   const maxExpense = Math.max(...expenses.map((e) => e.value), 1);

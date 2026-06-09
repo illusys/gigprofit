@@ -13,6 +13,8 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import LogTripScreen from './src/screens/LogTripScreen';
 import AnalyticsScreen from './src/screens/AnalyticsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import AuthScreen from './src/screens/AuthScreen';
+import AdminScreen from './src/screens/AdminScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -21,11 +23,13 @@ const TAB_ICONS = {
   Trips: ['add-circle', 'add-circle-outline'],
   Analytics: ['bar-chart', 'bar-chart-outline'],
   Settings: ['settings', 'settings-outline'],
+  Admin: ['shield-checkmark', 'shield-checkmark-outline'],
 };
 
 function AppNavigator() {
-  const { loading } = useApp();
+  const { loading, user, isAdmin } = useApp();
   if (loading) return <LoadingScreen />;
+  if (!user) return <AuthScreen />;
 
   return (
     <Tab.Navigator
@@ -56,6 +60,7 @@ function AppNavigator() {
       <Tab.Screen name="Trips" component={LogTripScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
+      {isAdmin ? <Tab.Screen name="Admin" component={AdminScreen} /> : null}
     </Tab.Navigator>
   );
 }

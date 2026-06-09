@@ -21,8 +21,20 @@ function today() {
   return new Date().toISOString().split('T')[0];
 }
 
+function isValidDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return false;
+  const d = new Date(`${value}T00:00:00`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().startsWith(value);
+}
+
+function shiftDate(value, days) {
+  const d = new Date(`${isValidDate(value) ? value : today()}T12:00:00`);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
 export default function LogTripScreen() {
-  const { trips, vehicle, addTrip, deleteTrip } = useApp();
+  const { trips, vehicle, addTrip, updateTrip, deleteTrip } = useApp();
   const [tab, setTab] = useState('log'); // 'log' | 'history'
 
   const [form, setForm] = useState({
@@ -32,9 +44,11 @@ export default function LogTripScreen() {
     hours: '',
     gross: '',
     tolls: '',
+    parking: '',
     note: '',
   });
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [platformOpen, setPlatformOpen] = useState(false);
 
   const setField = (key, val) => setForm((f) => ({ ...f, [key]: val }));
@@ -46,10 +60,12 @@ export default function LogTripScreen() {
       miles: parseFloat(form.miles) || 0,
       hours: parseFloat(form.hours) || 0,
       gross: parseFloat(form.gross) || 0,
+      tolls: parseFloat(form.tolls) || 0,
+      parking: parseFloat(form.parking) || 0,
     };
     if (mock.miles <= 0 || mock.gross <= 0) return null;
     const c = tripCost(mock, vehicle);
-    const tc = totalCost(c) + (parseFloat(form.tolls) || 0);
+    const tc = totalCost(c);
     const net = mock.gross - tc;
     return { ...c, total: tc, net, gross: mock.gross, miles: mock.miles };
   }, [form, vehicle]);
@@ -57,23 +73,46 @@ export default function LogTripScreen() {
   async function handleSubmit() {
     const miles = parseFloat(form.miles);
     const gross = parseFloat(form.gross);
+    if (!isValidDate(form.date)) {
+      Alert.alert('Invalid Date', 'Please choose a valid date in YYYY-MM-DD format.');
+      return;
+    }
     if (!miles || !gross || miles <= 0 || gross <= 0) {
       Alert.alert('Missing Info', 'Please enter miles and gross earnings.');
       return;
     }
     setSaving(true);
-    await addTrip({
+    const payload = {
       date: form.date,
       platform: form.platform,
       miles,
       hours: parseFloat(form.hours) || 0,
       gross,
       tolls: parseFloat(form.tolls) || 0,
+      parking: parseFloat(form.parking) || 0,
       note: form.note,
-    });
-    setForm({ date: today(), platform: form.platform, miles: '', hours: '', gross: '', tolls: '', note: '' });
+    };
+    if (editingId) await updateTrip(editingId, payload);
+    else await addTrip(payload);
+    setForm({ date: today(), platform: form.platform, miles: '', hours: '', gross: '', tolls: '', parking: '', note: '' });
+    setEditingId(null);
     setSaving(false);
-    Alert.alert('✓ Trip Logged', 'Your trip has been saved.');
+    Alert.alert(editingId ? '✓ Trip Updated' : '✓ Trip Logged', 'Your trip has been saved.');
+  }
+
+  function startEdit(trip) {
+    setEditingId(trip.id);
+    setForm({
+      date: String(trip.date).split('T')[0],
+      platform: trip.platform,
+      miles: String(trip.miles ?? ''),
+      hours: String(trip.hours ?? ''),
+      gross: String(trip.gross ?? ''),
+      tolls: String(trip.tolls ?? ''),
+      parking: String(trip.parking ?? ''),
+      note: trip.note || '',
+    });
+    setTab('log');
   }
 
   function handleDelete(id) {
@@ -114,16 +153,21 @@ export default function LogTripScreen() {
         >
           <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <Card>
-              <SectionTitle>Trip Details</SectionTitle>
+              <SectionTitle>{editingId ? 'Edit Trip' : 'Trip Details'}</SectionTitle>
 
               {/* Date */}
               <Label>Date</Label>
-              <StyledInput
-                value={form.date}
-                onChangeText={(v) => setField('date', v)}
-                placeholder="YYYY-MM-DD"
-                keyboardType={Platform.OS === 'web' ? 'default' : 'default'}
-              />
+              <Row style={{ gap: 8 }}>
+                <TouchableOpacity style={styles.stepBtn} onPress={() => setField('date', shiftDate(form.date, -1))}><Text style={styles.stepBtnText}>−</Text></TouchableOpacity>
+                <StyledInput
+                  value={form.date}
+                  onChangeText={(v) => setField('date', v)}
+                  placeholder="YYYY-MM-DD"
+                  keyboardType={Platform.OS === 'web' ? 'default' : 'default'}
+                  style={{ flex: 1 }}
+                />
+                <TouchableOpacity style={styles.stepBtn} onPress={() => setField('date', shiftDate(form.date, 1))}><Text style={styles.stepBtnText}>+</Text></TouchableOpacity>
+              </Row>
 
               {/* Platform picker */}
               <Label>Platform</Label>
@@ -183,7 +227,7 @@ export default function LogTripScreen() {
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Label>Tolls / Parking ($)</Label>
+                  <Label>Tolls ($)</Label>
                   <StyledInput
                     value={form.tolls}
                     onChangeText={(v) => setField('tolls', v)}
@@ -192,6 +236,13 @@ export default function LogTripScreen() {
                   />
                 </View>
               </Row>
+              <Label>Parking ($)</Label>
+              <StyledInput
+                value={form.parking}
+                onChangeText={(v) => setField('parking', v)}
+                placeholder="0.00"
+                keyboardType="decimal-pad"
+              />
 
               {/* Note */}
               <Label>Note (optional)</Label>
@@ -229,6 +280,8 @@ export default function LogTripScreen() {
                     { l: 'Tires', v: preview.tire },
                     { l: 'Oil', v: preview.oil },
                     { l: 'Insurance', v: preview.ins },
+                    { l: 'Tolls', v: preview.tolls },
+                    { l: 'Parking', v: preview.parking },
                   ].map((e) => (
                     <View key={e.l} style={styles.expItem}>
                       <Text style={styles.expLabel}>{e.l}</Text>
@@ -240,7 +293,7 @@ export default function LogTripScreen() {
             )}
 
             <PrimaryButton
-              label={saving ? 'Saving…' : '+ Log This Trip'}
+              label={saving ? 'Saving…' : editingId ? 'Save Trip Changes' : '+ Log This Trip'}
               onPress={handleSubmit}
               loading={saving}
               style={{ marginTop: 4 }}
@@ -253,13 +306,14 @@ export default function LogTripScreen() {
           <Text style={styles.histCount}>{trips.length} trips recorded</Text>
           {recentTrips.map((t) => {
             const c = tripCost(t, vehicle);
-            const tc = totalCost(c) + (t.tolls || 0);
+            const tc = totalCost(c);
             const net = t.gross - tc;
             return (
               <TouchableOpacity
                 key={t.id}
                 activeOpacity={0.85}
                 style={styles.tripRow}
+                onPress={() => startEdit(t)}
                 onLongPress={() => handleDelete(t.id)}
               >
                 <View style={{ flex: 1 }}>
@@ -277,7 +331,7 @@ export default function LogTripScreen() {
               </TouchableOpacity>
             );
           })}
-          <Text style={styles.deleteHint}>Long-press to delete a trip</Text>
+          <Text style={styles.deleteHint}>Tap to edit · Long-press to delete a trip</Text>
           <View style={{ height: 40 }} />
         </ScrollView>
       )}
@@ -340,6 +394,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   inputFocused: { borderColor: colors.accent },
+  stepBtn: { width: 44, height: 44, borderRadius: 10, backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center' },
+  stepBtnText: { color: colors.text, fontSize: 22, fontWeight: '900' },
   picker: {
     flexDirection: 'row',
     alignItems: 'center',

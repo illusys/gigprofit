@@ -1,4 +1,9 @@
-export const IRS_RATE = 0.67; // 2025 IRS standard mileage rate
+export const DEFAULT_TAX_SETTINGS = {
+  mileageRate: 0.67,
+  selfEmploymentTaxRate: 0.153,
+  incomeTaxRate: 0.22,
+  seTaxMultiplier: 0.9235,
+};
 
 export const PLATFORMS = [
   'Uber',
@@ -33,17 +38,24 @@ export function tripCost(trip, vehicle) {
   const oil = (trip.miles / v.oilChangeInterval) * v.oilChangeCost;
   const ins = (v.insuranceMonthly / 3500) * trip.miles;
   const loan = (v.loanMonthly / 3500) * trip.miles;
-  return { fuel, dep, maint, tire, oil, ins, loan };
+  const tolls = +(trip.tolls || 0);
+  const parking = +(trip.parking || 0);
+  return { fuel, dep, maint, tire, oil, ins, loan, tolls, parking };
 }
 
 export function totalCost(c) {
-  return c.fuel + c.dep + c.maint + c.tire + c.oil + c.ins + c.loan;
+  return c.fuel + c.dep + c.maint + c.tire + c.oil + c.ins + c.loan + (c.tolls || 0) + (c.parking || 0);
 }
 
-export function computeStats(trips, vehicle, period) {
+export function dateKey(value) {
+  if (!value) return new Date().toISOString().split('T')[0];
+  return String(value).split('T')[0];
+}
+
+export function computeStats(trips, vehicle, period, taxSettings = DEFAULT_TAX_SETTINGS) {
   const now = new Date();
   const filtered = trips.filter((t) => {
-    const d = new Date(t.date + 'T12:00:00');
+    const d = new Date(dateKey(t.date) + 'T12:00:00');
     const diff = (now - d) / 86400000;
     if (period === 'day') return diff < 1;
     if (period === 'week') return diff < 7;
@@ -72,7 +84,7 @@ export function computeStats(trips, vehicle, period) {
     byPlatform[t.platform].miles += t.miles;
     byPlatform[t.platform].hours += t.hours;
 
-    const dayKey = t.date;
+    const dayKey = dateKey(t.date);
     if (!byDay[dayKey]) byDay[dayKey] = { gross: 0, cost: 0, net: 0 };
     byDay[dayKey].gross += t.gross;
     byDay[dayKey].cost += tc;
@@ -85,7 +97,7 @@ export function computeStats(trips, vehicle, period) {
   const hourlyRate = hours > 0 ? net / hours : 0;
 
   // Expense breakdown
-  let expFuel = 0, expDep = 0, expMaint = 0, expTire = 0, expOil = 0, expIns = 0, expLoan = 0;
+  let expFuel = 0, expDep = 0, expMaint = 0, expTire = 0, expOil = 0, expIns = 0, expLoan = 0, expTolls = 0, expParking = 0;
   filtered.forEach((t) => {
     const c = tripCost(t, vehicle);
     expFuel += c.fuel;
@@ -95,12 +107,15 @@ export function computeStats(trips, vehicle, period) {
     expOil += c.oil;
     expIns += c.ins;
     expLoan += c.loan;
+    expTolls += c.tolls || 0;
+    expParking += c.parking || 0;
   });
 
-  const seTax = Math.max(net, 0) * 0.9235 * 0.153;
-  const incomeTax = Math.max(net - seTax, 0) * 0.22;
+  const tax = { ...DEFAULT_TAX_SETTINGS, ...(taxSettings || {}) };
+  const seTax = Math.max(net, 0) * tax.seTaxMultiplier * tax.selfEmploymentTaxRate;
+  const incomeTax = Math.max(net - seTax, 0) * tax.incomeTaxRate;
   const taxEst = seTax + incomeTax;
-  const mileageDeduction = miles * IRS_RATE;
+  const mileageDeduction = miles * tax.mileageRate;
   const afterTax = net - taxEst;
 
   return {
@@ -108,7 +123,8 @@ export function computeStats(trips, vehicle, period) {
     byPlatform, byDay,
     taxEst, mileageDeduction, afterTax,
     totalTrips: filtered.length,
-    expenses: { fuel: expFuel, dep: expDep, maint: expMaint, tire: expTire, oil: expOil, ins: expIns, loan: expLoan },
+    expenses: { fuel: expFuel, dep: expDep, maint: expMaint, tire: expTire, oil: expOil, ins: expIns, loan: expLoan, tolls: expTolls, parking: expParking },
+    taxSettings: tax,
   };
 }
 
