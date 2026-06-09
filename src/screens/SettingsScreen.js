@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import { tripCost, totalCost, fmt, IRS_RATE, defaultVehicle } from '../utils/calculations';
+import { tripCost, totalCost, fmt, DEFAULT_TAX_SETTINGS, defaultVehicle } from '../utils/calculations';
 import { colors, spacing, radius } from '../utils/theme';
 import { Card, SectionTitle, PrimaryButton, GhostButton, Divider, Row } from '../components/UI';
 
@@ -30,7 +30,7 @@ const FIELDS = [
 ];
 
 export default function SettingsScreen() {
-  const { vehicle, setVehicle, trips, clearAllData } = useApp();
+  const { user, vehicle, taxSettings, setVehicle, setTaxSettings, trips, clearAllData, logout } = useApp();
   const [saving, setSaving] = useState(false);
 
   function adjust(key, delta) {
@@ -112,7 +112,7 @@ export default function SettingsScreen() {
             <Text style={{ color: colors.danger, fontWeight: '900', fontSize: 16 }}>{fmt(preview100.total)}</Text>
           </Row>
           <Text style={{ fontSize: 10, color: colors.muted, marginTop: 6 }}>
-            IRS standard mileage: ${IRS_RATE}/mi ({IRS_RATE * 100}¢) — use whichever method benefits you more at tax time.
+            {`Mileage rate: $${taxSettings.mileageRate}/mi (${Math.round(taxSettings.mileageRate * 100)}¢) — managed from your profile or Admin Settings.`}
           </Text>
         </Card>
 
@@ -159,6 +159,20 @@ export default function SettingsScreen() {
           ))}
         </Card>
 
+        {/* Tax settings */}
+        <Card>
+          <SectionTitle>Tax Settings</SectionTitle>
+          <Text style={styles.aboutText}>Override default tax assumptions for your account.</Text>
+          <Row style={styles.fieldRow}>
+            <Text style={[styles.fieldLabel, { flex: 1 }]}>Mileage Rate ($/mi)</Text>
+            <TextInput style={styles.stepInput} value={String(taxSettings.mileageRate ?? DEFAULT_TAX_SETTINGS.mileageRate)} onChangeText={(v) => { const n = parseFloat(v); if (!isNaN(n)) setTaxSettings({ mileageRate: n }); }} keyboardType="decimal-pad" />
+          </Row>
+          <Row style={styles.fieldRow}>
+            <Text style={[styles.fieldLabel, { flex: 1 }]}>Income Tax Rate</Text>
+            <TextInput style={styles.stepInput} value={String(taxSettings.incomeTaxRate ?? DEFAULT_TAX_SETTINGS.incomeTaxRate)} onChangeText={(v) => { const n = parseFloat(v); if (!isNaN(n)) setTaxSettings({ incomeTaxRate: n }); }} keyboardType="decimal-pad" />
+          </Row>
+        </Card>
+
         {/* Stats summary */}
         <Card>
           <SectionTitle>Data Summary</SectionTitle>
@@ -194,6 +208,7 @@ export default function SettingsScreen() {
 
         {/* Actions */}
         <GhostButton label="Reset Vehicle Defaults" onPress={handleReset} style={{ marginBottom: 8 }} />
+        {user ? <GhostButton label="Logout" onPress={logout} style={{ marginBottom: 8 }} /> : null}
         <GhostButton
           label={saving ? 'Resetting…' : 'Clear All Data'}
           onPress={handleClearData}

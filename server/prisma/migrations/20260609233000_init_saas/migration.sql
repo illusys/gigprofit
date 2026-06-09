@@ -1,0 +1,135 @@
+-- GigProfit SaaS initial schema for PostgreSQL. Generated from server/prisma/schema.prisma.
+CREATE TYPE "Role" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'USER');
+CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'PENDING_VERIFICATION', 'DELETED');
+CREATE TYPE "ReportType" AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
+CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'TRIALING', 'PAST_DUE', 'CANCELED', 'INCOMPLETE');
+
+CREATE TABLE "User" (
+  "id" TEXT PRIMARY KEY,
+  "firstName" TEXT NOT NULL,
+  "lastName" TEXT NOT NULL,
+  "email" TEXT NOT NULL UNIQUE,
+  "phone" TEXT,
+  "passwordHash" TEXT NOT NULL,
+  "role" "Role" NOT NULL DEFAULT 'USER',
+  "status" "UserStatus" NOT NULL DEFAULT 'PENDING_VERIFICATION',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "lastLogin" TIMESTAMP(3)
+);
+
+CREATE TABLE "UserProfile" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL UNIQUE REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "avatarUrl" TEXT,
+  "vehicleSettings" JSONB NOT NULL DEFAULT '{}',
+  "preferences" JSONB NOT NULL DEFAULT '{}',
+  "notificationSettings" JSONB NOT NULL DEFAULT '{}',
+  "taxSettings" JSONB NOT NULL DEFAULT '{}',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "Trip" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "date" TIMESTAMP(3) NOT NULL,
+  "platform" TEXT NOT NULL,
+  "miles" DOUBLE PRECISION NOT NULL,
+  "hours" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "gross" DOUBLE PRECISION NOT NULL,
+  "tolls" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "parking" DOUBLE PRECISION NOT NULL DEFAULT 0,
+  "note" TEXT,
+  "createdBy" TEXT REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "updatedBy" TEXT REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX "Trip_userId_date_idx" ON "Trip"("userId", "date");
+CREATE INDEX "Trip_platform_idx" ON "Trip"("platform");
+
+CREATE TABLE "Report" (
+  "reportId" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "reportType" "ReportType" NOT NULL,
+  "generatedDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "jsonData" JSONB NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX "Report_userId_reportType_generatedDate_idx" ON "Report"("userId", "reportType", "generatedDate");
+
+CREATE TABLE "AuditLog" (
+  "id" TEXT PRIMARY KEY,
+  "actorId" TEXT REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+  "action" TEXT NOT NULL,
+  "entityType" TEXT NOT NULL,
+  "entityId" TEXT,
+  "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "ipAddress" TEXT,
+  "metadata" JSONB NOT NULL DEFAULT '{}'
+);
+CREATE INDEX "AuditLog_actorId_timestamp_idx" ON "AuditLog"("actorId", "timestamp");
+CREATE INDEX "AuditLog_action_idx" ON "AuditLog"("action");
+CREATE INDEX "AuditLog_entityType_idx" ON "AuditLog"("entityType");
+
+CREATE TABLE "RefreshToken" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "tokenHash" TEXT NOT NULL UNIQUE,
+  "userAgent" TEXT,
+  "ipAddress" TEXT,
+  "expiresAt" TIMESTAMP(3) NOT NULL,
+  "revokedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX "RefreshToken_userId_idx" ON "RefreshToken"("userId");
+
+CREATE TABLE "PasswordResetToken" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "tokenHash" TEXT NOT NULL UNIQUE,
+  "expiresAt" TIMESTAMP(3) NOT NULL,
+  "usedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "EmailVerificationToken" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "tokenHash" TEXT NOT NULL UNIQUE,
+  "expiresAt" TIMESTAMP(3) NOT NULL,
+  "usedAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "SystemSetting" (
+  "key" TEXT PRIMARY KEY,
+  "value" JSONB NOT NULL,
+  "updatedBy" TEXT,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "SubscriptionPlan" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL UNIQUE,
+  "monthlyPrice" DECIMAL(10,2) NOT NULL,
+  "yearlyPrice" DECIMAL(10,2) NOT NULL,
+  "features" JSONB NOT NULL DEFAULT '[]',
+  "isActive" BOOLEAN NOT NULL DEFAULT true,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE "UserSubscription" (
+  "id" TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "planId" TEXT NOT NULL REFERENCES "SubscriptionPlan"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+  "status" "SubscriptionStatus" NOT NULL DEFAULT 'TRIALING',
+  "startsAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "endsAt" TIMESTAMP(3),
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX "UserSubscription_userId_idx" ON "UserSubscription"("userId");
