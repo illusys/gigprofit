@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GigProfit",
-    "slug": "gigprofit",
+    "name": "GigsProfit",
+    "slug": "gigsprofit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,8 +29,8 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "name": "GigProfit",
-      "shortName": "GigProfit",
+      "name": "GigsProfit",
+      "shortName": "GigsProfit",
       "lang": "en",
       "themeColor": "#00e5a0",
       "backgroundColor": "#0a0c10"
