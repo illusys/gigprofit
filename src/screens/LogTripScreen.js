@@ -28,9 +28,52 @@ function isValidDate(value) {
 }
 
 function shiftDate(value, days) {
-  const d = new Date(`${isValidDate(value) ? value : today()}T12:00:00`);
+  const d = new Date(`${isValidDate(value) ? value : today()}T12:00:00Z`);
   d.setDate(d.getDate() + days);
   return d.toISOString().split('T')[0];
+}
+
+function DateInput({ value, onChange }) {
+  if (Platform.OS === 'web') {
+    return (
+      <input
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          width: '100%',
+          backgroundColor: colors.surface2,
+          border: `1px solid ${colors.border}`,
+          borderRadius: radius.md,
+          padding: '12px 14px',
+          color: colors.text,
+          fontSize: 15,
+          colorScheme: 'dark',
+          cursor: 'pointer',
+          outline: 'none',
+          fontFamily: 'inherit',
+          marginBottom: 2,
+          boxSizing: 'border-box',
+        }}
+      />
+    );
+  }
+  return (
+    <Row style={{ gap: 8 }}>
+      <TouchableOpacity style={styles.stepBtn} onPress={() => onChange(shiftDate(value, -1))}>
+        <Text style={styles.stepBtnText}>−</Text>
+      </TouchableOpacity>
+      <StyledInput
+        value={value}
+        onChangeText={onChange}
+        placeholder="YYYY-MM-DD"
+        style={{ flex: 1 }}
+      />
+      <TouchableOpacity style={styles.stepBtn} onPress={() => onChange(shiftDate(value, 1))}>
+        <Text style={styles.stepBtnText}>+</Text>
+      </TouchableOpacity>
+    </Row>
+  );
 }
 
 export default function LogTripScreen() {
@@ -164,17 +207,7 @@ export default function LogTripScreen() {
 
               {/* Date */}
               <Label>Date</Label>
-              <Row style={{ gap: 8 }}>
-                <TouchableOpacity style={styles.stepBtn} onPress={() => setField('date', shiftDate(form.date, -1))}><Text style={styles.stepBtnText}>−</Text></TouchableOpacity>
-                <StyledInput
-                  value={form.date}
-                  onChangeText={(v) => setField('date', v)}
-                  placeholder="YYYY-MM-DD"
-                  keyboardType={Platform.OS === 'web' ? 'default' : 'default'}
-                  style={{ flex: 1 }}
-                />
-                <TouchableOpacity style={styles.stepBtn} onPress={() => setField('date', shiftDate(form.date, 1))}><Text style={styles.stepBtnText}>+</Text></TouchableOpacity>
-              </Row>
+              <DateInput value={form.date} onChange={(v) => setField('date', v)} />
 
               {/* Platform picker */}
               <Label>Platform</Label>
