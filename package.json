@@ -8,6 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "server": "node server/index.js",
+    "start:server": "node server/index.js",
+    "postinstall": "./node_modules/.bin/prisma generate --schema server/prisma/schema.prisma",
     "test": "node --test server/tests/*.test.js",
     "lint": "node --check server/index.js && node --check server/services/profitService.js && node --check server/services/validationService.js",
     "prisma:generate": "./node_modules/.bin/prisma generate --schema server/prisma/schema.prisma",
