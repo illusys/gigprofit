@@ -1,14 +1,14 @@
 {
+  "name": "GigsProfit",
   "short_name": "GigsProfit",
-  "name": "GigsProfit — Real Profit for Gig Drivers",
-  "description": "Calculate your real take-home pay after all costs across Uber, DoorDash, Lyft, and more.",
-  "icons": [
-    { "src": "/favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
-    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any maskable" }
-  ],
+  "description": "Real profit calculator for gig drivers — Uber, DoorDash, Lyft, Instacart, Amazon Flex",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#00e5a0",
   "background_color": "#0a0c10",
-  "orientation": "portrait"
+  "theme_color": "#00e5a0",
+  "icons": [
+    { "src": "/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
 }

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="110" fill="#000000"/>
+  <text x="145" y="363" text-anchor="middle"
+    font-family="Arial Black, Arial, sans-serif"
+    font-weight="900"
+    font-size="290"
+    letter-spacing="-16">
+    <tspan fill="#ffffff">G</tspan><tspan fill="#00e5a0">P</tspan>
+  </text>
+</svg>
