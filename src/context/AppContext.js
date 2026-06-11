@@ -80,6 +80,13 @@ export function AppProvider({ children }) {
 
   const register = useCallback(async (payload) => api.register(payload), []);
 
+  const loginWithGoogle = useCallback(async (idToken) => {
+    const data = await api.googleAuth(idToken);
+    setUser(data.user);
+    await hydrate();
+    return data.user;
+  }, [hydrate]);
+
   const logout = useCallback(async () => {
     await api.logout();
     setUser(null);
@@ -158,7 +165,7 @@ export function AppProvider({ children }) {
   }, []);
 
   return (
-    <AppContext.Provider value={{ user, isAdmin, trips, vehicle, taxSettings, period, loading, setPeriod, login, register, logout, refreshCloudData, addTrip, updateTrip, deleteTrip, setVehicle, setTaxSettings, clearAllData }}>
+    <AppContext.Provider value={{ user, isAdmin, trips, vehicle, taxSettings, period, loading, setPeriod, login, loginWithGoogle, register, logout, refreshCloudData, addTrip, updateTrip, deleteTrip, setVehicle, setTaxSettings, clearAllData }}>
       {children}
     </AppContext.Provider>
   );

@@ -13,4 +13,5 @@ router.post('/reset-password', requireFields(['token', 'password']), c.resetPass
 router.get('/me', authenticate, c.me);
 router.post('/change-password', authenticate, requireFields(['currentPassword', 'nextPassword']), c.changePassword);
 router.post('/logout-all', authenticate, c.logoutAll);
+router.post('/google', requireFields(['idToken']), c.googleLogin);
 module.exports = router;

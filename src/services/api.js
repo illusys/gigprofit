@@ -40,6 +40,11 @@ export const api = {
     await setTokens(data);
     return data;
   },
+  googleAuth: async (idToken) => {
+    const data = await request('/auth/google', { method: 'POST', body: { idToken } });
+    await setTokens(data);
+    return data;
+  },
   logout: async () => {
     const refreshToken = await AsyncStorage.getItem(REFRESH_KEY);
     try { await request('/auth/logout', { method: 'POST', body: { refreshToken } }); } finally { await clearTokens(); }

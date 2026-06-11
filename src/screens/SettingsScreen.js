@@ -192,9 +192,9 @@ export default function SettingsScreen() {
 
         {/* About */}
         <Card>
-          <SectionTitle>About GigProfit</SectionTitle>
+          <SectionTitle>About GigsProfit</SectionTitle>
           <Text style={styles.aboutText}>
-            GigProfit helps gig economy drivers track real profitability across all platforms — after fuel, depreciation, maintenance, insurance, and taxes.
+            GigsProfit helps gig economy drivers track real profitability across all platforms — after fuel, depreciation, maintenance, insurance, and taxes.
           </Text>
           <Text style={[styles.aboutText, { marginTop: 8 }]}>
             AI coaching powered by Claude (Anthropic). Tax estimates are for informational purposes only — consult a tax professional.

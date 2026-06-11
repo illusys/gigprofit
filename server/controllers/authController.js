@@ -11,5 +11,6 @@ async function forgotPassword(req, res, next) { try { res.json(await authService
 async function resetPassword(req, res, next) { try { res.json(await authService.resetPassword(req.body.token, req.body.password, context(req))); } catch (e) { next(e); } }
 async function changePassword(req, res, next) { try { res.json(await authService.changePassword(req.user, req.body.currentPassword, req.body.nextPassword, context(req))); } catch (e) { next(e); } }
 async function me(req, res) { res.json({ user: authService.sanitizeUser(req.user) }); }
+async function googleLogin(req, res, next) { try { res.json(await authService.googleLogin(req.body.idToken, context(req))); } catch (e) { next(e); } }
 
-module.exports = { register, login, refresh, logout, logoutAll, forgotPassword, resetPassword, changePassword, me };
+module.exports = { register, login, refresh, logout, logoutAll, forgotPassword, resetPassword, changePassword, me, googleLogin };
