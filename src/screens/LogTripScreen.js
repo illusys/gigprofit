@@ -82,22 +82,27 @@ export default function LogTripScreen() {
       return;
     }
     setSaving(true);
-    const payload = {
-      date: form.date,
-      platform: form.platform,
-      miles,
-      hours: parseFloat(form.hours) || 0,
-      gross,
-      tolls: parseFloat(form.tolls) || 0,
-      parking: parseFloat(form.parking) || 0,
-      note: form.note,
-    };
-    if (editingId) await updateTrip(editingId, payload);
-    else await addTrip(payload);
-    setForm({ date: today(), platform: form.platform, miles: '', hours: '', gross: '', tolls: '', parking: '', note: '' });
-    setEditingId(null);
-    setSaving(false);
-    Alert.alert(editingId ? '✓ Trip Updated' : '✓ Trip Logged', 'Your trip has been saved.');
+    try {
+      const payload = {
+        date: form.date,
+        platform: form.platform,
+        miles,
+        hours: parseFloat(form.hours) || 0,
+        gross,
+        tolls: parseFloat(form.tolls) || 0,
+        parking: parseFloat(form.parking) || 0,
+        note: form.note,
+      };
+      if (editingId) await updateTrip(editingId, payload);
+      else await addTrip(payload);
+      setForm({ date: today(), platform: form.platform, miles: '', hours: '', gross: '', tolls: '', parking: '', note: '' });
+      setEditingId(null);
+      Alert.alert(editingId ? '✓ Trip Updated' : '✓ Trip Logged', 'Your trip has been saved.');
+    } catch (e) {
+      Alert.alert('Could Not Save Trip', e.message || 'Check your connection and try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function startEdit(trip) {

@@ -21,12 +21,37 @@ async function clearTokens() {
   await AsyncStorage.multiRemove([TOKEN_KEY, REFRESH_KEY]);
 }
 
-async function request(path, options = {}) {
+async function refreshAccessToken() {
+  const refreshToken = await AsyncStorage.getItem(REFRESH_KEY);
+  if (!refreshToken) throw new Error('No refresh token');
+  const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  });
+  if (!res.ok) throw new Error('Token refresh failed');
+  const data = await res.json();
+  await setTokens(data);
+  return data.accessToken;
+}
+
+async function request(path, options = {}, isRetry = false) {
   const token = await getAccessToken();
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers, body: options.body && typeof options.body !== 'string' ? JSON.stringify(options.body) : options.body });
   if (res.status === 204) return null;
+
+  if (res.status === 401 && !isRetry) {
+    try {
+      await refreshAccessToken();
+      return request(path, options, true);
+    } catch {
+      await clearTokens();
+      throw new Error('Session expired. Please sign in again.');
+    }
+  }
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error?.message || 'API request failed');
   return data;
