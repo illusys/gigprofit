@@ -2,8 +2,9 @@ services:
   - type: web
     name: gigprofit-api
     runtime: node
-    buildCommand: npm install && npm run prisma:generate
-    startCommand: npm run prisma:migrate:deploy && node server/index.js
+    nodeVersion: 20.x
+    buildCommand: npm install
+    startCommand: node server/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

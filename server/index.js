@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { execSync } = require('child_process');
 const express = require('express');
 const authRoutes = require('./api/authRoutes');
 const tripRoutes = require('./api/tripRoutes');
@@ -28,6 +29,10 @@ app.use(notFound);
 app.use(errorHandler);
 
 async function start() {
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Running database migrations…');
+    execSync('./node_modules/.bin/prisma migrate deploy --schema server/prisma/schema.prisma', { stdio: 'inherit' });
+  }
   await bootstrapSuperAdmin();
   const port = Number(process.env.PORT || 4000);
   app.listen(port, () => console.log(`GigProfit API listening on :${port}`));
