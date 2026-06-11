@@ -19,15 +19,15 @@ export default function AuthScreen() {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    responseType: 'id_token',
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: GOOGLE_WEB_CLIENT_ID,
   });
 
   useEffect(() => {
     if (response?.type === 'success') {
-      const idToken = response.params?.id_token || response.authentication?.idToken;
+      const idToken = response.params?.id_token;
       if (idToken) handleGoogleToken(idToken);
+      else Alert.alert('Google sign-in failed', 'No ID token returned. Check your Google Client ID configuration.');
     } else if (response?.type === 'error') {
       Alert.alert('Google sign-in failed', response.error?.message || 'Please try again.');
     }
