@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { inject as injectVercelAnalytics } from '@vercel/analytics';
 import { StatusBar, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -85,6 +86,8 @@ function AppNavigator() {
 }
 
 export default function App() {
+  useEffect(() => { injectVercelAnalytics(); }, []);
+
   return (
     <SafeAreaProvider>
       <AppProvider>

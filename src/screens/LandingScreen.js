@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   Animated, Easing,
@@ -27,10 +27,34 @@ const TESTIMONIALS = [
   },
 ];
 
+const FAQS = [
+  {
+    q: 'Which gig platform pays the most after expenses?',
+    a: 'It depends on your location and vehicle. Amazon Flex tends to yield high net pay because deliveries are batched. GigsProfit lets you compare real net dollars per hour across every platform so you can decide which shifts are actually worth it.',
+  },
+  {
+    q: 'What is the IRS mileage deduction for 2026?',
+    a: 'The IRS standard mileage rate for 2026 is $0.72 per mile for business use. A driver who logs 25,000 miles per year deducts $18,000 — often wiping out most of the self-employment tax bill. GigsProfit tracks this automatically.',
+  },
+  {
+    q: 'How much do gig drivers pay in self-employment tax?',
+    a: 'Gig drivers pay 15.3% self-employment tax on net profit — 12.4% Social Security and 2.9% Medicare. For a driver netting $2,000 per month, that\'s $306 per month in SE tax alone, before income tax. GigsProfit shows your running estimate.',
+  },
+  {
+    q: 'Does GigsProfit work for Instacart, Amazon Flex and Shipt?',
+    a: 'Yes. GigsProfit supports Uber, Lyft, DoorDash, Instacart, Amazon Flex, Grubhub, Uber Eats, and Shipt. Log any trip on any platform and compare real profit side by side.',
+  },
+  {
+    q: 'Is GigsProfit free to use?',
+    a: 'GigsProfit is completely free. No subscription, no credit card. Sign up, set your vehicle costs once, and start seeing your real profit immediately.',
+  },
+];
+
 export default function LandingScreen({ onGetStarted, onSignIn }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
+  const [openFaq, setOpenFaq] = useState(null);
 
   useEffect(() => {
     Animated.parallel([
@@ -73,7 +97,7 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
             isn't your income.
           </Animated.Text>
           <Text style={styles.heroSub}>
-            GigsProfit calculates your real take-home after fuel, depreciation, insurance, maintenance, and taxes — across every platform you drive.
+            GigsProfit calculates your real take-home pay after fuel, mileage at the IRS rate of $0.72 per mile, vehicle maintenance, and self-employment tax. DoorDash drivers earn $12.23 per hour on average gross — but real net pay after costs is 35–45% lower. GigsProfit shows you the actual number for every trip.
           </Text>
           <TouchableOpacity style={styles.heroCta} onPress={onGetStarted} activeOpacity={0.85}>
             <Text style={styles.heroCtaText}>Start tracking for free</Text>
@@ -86,9 +110,9 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
         {/* Stats strip */}
         <View style={styles.statsStrip}>
           {[
-            { value: '$0.67', label: 'IRS mileage rate tracked', color: colors.accent },
-            { value: '9', label: 'cost categories calculated', color: '#7c6aff' },
-            { value: '∞', label: 'platforms supported', color: '#ff6b35' },
+            { value: '$0.72', label: 'IRS mileage rate per mile (2026)', color: '#00e5a0' },
+            { value: '9', label: 'cost categories tracked per trip', color: '#7c6aff' },
+            { value: '35–45%', label: 'what expenses cut from gross pay', color: '#ff6b35' },
           ].map((s, i) => (
             <View key={s.label} style={[styles.statCol, i > 0 && styles.statColBorder]}>
               <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
@@ -112,7 +136,9 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
             </View>
           </View>
           <View style={styles.compareNote}>
-            <Text style={styles.compareNoteText}>$356 in costs you didn't see.</Text>
+            <Text style={styles.compareNoteText}>
+              GridWise Analytics reports DoorDash drivers earn $12.23/hr gross. After costs, real take-home is often under $8/hr. GigsProfit shows your number.
+            </Text>
           </View>
         </View>
 
@@ -150,6 +176,33 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
               </View>
             </View>
           ))}
+        </View>
+
+        {/* FAQ accordion */}
+        <View style={styles.section}>
+          <Text style={styles.sectionEyebrow}>QUESTIONS GIG DRIVERS ASK</Text>
+          <Text style={styles.sectionHead}>Real answers for Uber, DoorDash, Lyft, Instacart and Amazon Flex drivers</Text>
+          {FAQS.map((item, i) => {
+            const open = openFaq === i;
+            return (
+              <TouchableOpacity
+                key={i}
+                style={styles.faqItem}
+                onPress={() => setOpenFaq(open ? null : i)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.faqHeader}>
+                  <Text style={styles.faqQuestion}>{item.q}</Text>
+                  <Ionicons
+                    name={open ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color={colors.accent}
+                  />
+                </View>
+                {open && <Text style={styles.faqAnswer}>{item.a}</Text>}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Final CTA */}
@@ -264,7 +317,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   statColBorder: { borderLeftWidth: 1, borderLeftColor: colors.border },
-  statValue: { fontSize: 26, fontWeight: '900', letterSpacing: -0.5 },
+  statValue: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   statLabel: { fontSize: 10, color: colors.muted, textAlign: 'center', marginTop: 4, lineHeight: 14 },
 
   // Sections
@@ -317,9 +370,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface2,
     borderRadius: radius.md,
     padding: 12,
-    alignItems: 'center',
   },
-  compareNoteText: { color: colors.textSub, fontSize: 14, fontWeight: '600' },
+  compareNoteText: { color: colors.textSub, fontSize: 13, fontWeight: '500', lineHeight: 20 },
 
   // Features
   featureRow: {
@@ -364,6 +416,24 @@ const styles = StyleSheet.create({
   testimonialAvatarText: { color: colors.accent, fontWeight: '900', fontSize: 15 },
   testimonialName: { color: colors.text, fontWeight: '700', fontSize: 13 },
   testimonialLocation: { color: colors.muted, fontSize: 11 },
+
+  // FAQ
+  faqItem: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: 16,
+    marginBottom: 10,
+  },
+  faqHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  faqQuestion: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text, lineHeight: 20 },
+  faqAnswer: { fontSize: 13, color: colors.muted, lineHeight: 20, marginTop: 12 },
 
   // Final CTA
   finalCta: {
