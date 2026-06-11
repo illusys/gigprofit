@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
@@ -14,10 +14,11 @@ const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
 export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
   const { login, loginWithGoogle, register } = useApp();
   const [mode, setMode] = useState(initialMode);
+  const [authError, setAuthError] = useState('');
 
-  useEffect(() => { setMode(initialMode); }, [initialMode]);
+  useEffect(() => { setMode(initialMode); setAuthError(''); }, [initialMode]);
   const [busy, setBusy] = useState(false);
-  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -26,44 +27,63 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
   });
 
   useEffect(() => {
-    if (response?.type === 'success') {
+    if (!response) return;
+    if (response.type === 'success') {
       const idToken = response.params?.id_token;
-      if (idToken) handleGoogleToken(idToken);
-      else Alert.alert('Google sign-in failed', 'No ID token returned. Check your Google Client ID configuration.');
-    } else if (response?.type === 'error') {
-      Alert.alert('Google sign-in failed', response.error?.message || 'Please try again.');
+      if (idToken) {
+        handleGoogleToken(idToken);
+      } else {
+        setGoogleLoading(false);
+        setAuthError('Google sign-in failed: no ID token returned. Check your Google Client ID.');
+      }
+    } else if (response.type === 'error') {
+      setGoogleLoading(false);
+      setAuthError(response.error?.message || 'Google sign-in failed. Please try again.');
+    } else {
+      // cancelled / dismissed
+      setGoogleLoading(false);
     }
   }, [response]);
 
   async function handleGoogleToken(idToken) {
-    setGoogleBusy(true);
     try {
       await loginWithGoogle(idToken);
     } catch (e) {
-      Alert.alert('Google sign-in failed', e.message);
+      setAuthError(e.message || 'Google sign-in failed. Please try again.');
     } finally {
-      setGoogleBusy(false);
+      setGoogleLoading(false);
+    }
+  }
+
+  async function handleGooglePress() {
+    setAuthError('');
+    setGoogleLoading(true);
+    try {
+      await promptAsync();
+    } catch {
+      setGoogleLoading(false);
     }
   }
 
   async function submit() {
+    setAuthError('');
     setBusy(true);
     try {
       if (mode === 'login') {
         await login({ email: form.email, password: form.password });
       } else {
         await register(form);
-        Alert.alert('Account created', 'Check your email for verification, then sign in.');
         setMode('login');
+        setAuthError('');
       }
     } catch (e) {
-      Alert.alert('Authentication failed', e.message);
+      setAuthError(e.message || 'Authentication failed. Please try again.');
     } finally {
       setBusy(false);
     }
   }
 
-  const googleDisabled = !GOOGLE_WEB_CLIENT_ID || !request || googleBusy;
+  const googleDisabled = !GOOGLE_WEB_CLIENT_ID || !request || googleLoading;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -96,6 +116,8 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
 
           <PrimaryButton label={mode === 'login' ? 'Sign In' : 'Register'} onPress={submit} loading={busy} />
 
+          {authError ? <Text style={styles.authError}>{authError}</Text> : null}
+
           <Row style={styles.dividerRow}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>or</Text>
@@ -104,13 +126,17 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
 
           <TouchableOpacity
             style={[styles.googleBtn, googleDisabled && { opacity: 0.45 }]}
-            onPress={() => promptAsync()}
+            onPress={handleGooglePress}
             disabled={googleDisabled}
             activeOpacity={0.8}
           >
-            <Text style={styles.googleG}>G</Text>
+            {googleLoading ? (
+              <ActivityIndicator size="small" color={colors.accent} />
+            ) : (
+              <Text style={styles.googleG}>G</Text>
+            )}
             <Text style={styles.googleText}>
-              {googleBusy ? 'Signing in…' : 'Continue with Google'}
+              {googleLoading ? 'Signing in with Google…' : 'Continue with Google'}
             </Text>
           </TouchableOpacity>
 
@@ -120,7 +146,7 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
             </Text>
           )}
 
-          <TouchableOpacity style={styles.switch} onPress={() => setMode(mode === 'login' ? 'register' : 'login')}>
+          <TouchableOpacity style={styles.switch} onPress={() => { setMode(mode === 'login' ? 'register' : 'login'); setAuthError(''); }}>
             <Text style={styles.switchText}>
               {mode === 'login' ? "Don't have an account? Register" : 'Already have an account? Sign in'}
             </Text>
@@ -151,6 +177,14 @@ const styles = StyleSheet.create({
     padding: 13,
     color: colors.text,
     marginBottom: 10,
+  },
+  authError: {
+    color: colors.danger,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 2,
   },
   dividerRow: { alignItems: 'center', gap: 10, marginVertical: 14 },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },

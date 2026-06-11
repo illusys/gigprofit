@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -23,7 +22,8 @@ function today() {
 
 function isValidDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return false;
-  const d = new Date(`${value}T00:00:00`);
+  // Use noon UTC so toISOString() returns the same calendar date in every timezone
+  const d = new Date(`${value}T12:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().startsWith(value);
 }
 
@@ -48,6 +48,7 @@ export default function LogTripScreen() {
     note: '',
   });
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [platformOpen, setPlatformOpen] = useState(false);
 
@@ -71,14 +72,15 @@ export default function LogTripScreen() {
   }, [form, vehicle]);
 
   async function handleSubmit() {
+    setFormError('');
     const miles = parseFloat(form.miles);
     const gross = parseFloat(form.gross);
     if (!isValidDate(form.date)) {
-      Alert.alert('Invalid Date', 'Please choose a valid date in YYYY-MM-DD format.');
+      setFormError('Please enter a valid date (YYYY-MM-DD).');
       return;
     }
     if (!miles || !gross || miles <= 0 || gross <= 0) {
-      Alert.alert('Missing Info', 'Please enter miles and gross earnings.');
+      setFormError('Miles driven and gross earnings are required.');
       return;
     }
     setSaving(true);
@@ -97,9 +99,9 @@ export default function LogTripScreen() {
       else await addTrip(payload);
       setForm({ date: today(), platform: form.platform, miles: '', hours: '', gross: '', tolls: '', parking: '', note: '' });
       setEditingId(null);
-      Alert.alert(editingId ? '✓ Trip Updated' : '✓ Trip Logged', 'Your trip has been saved.');
+      setFormError('');
     } catch (e) {
-      Alert.alert('Could Not Save Trip', e.message || 'Check your connection and try again.');
+      setFormError(e.message || 'Could not save trip. Check your connection and try again.');
     } finally {
       setSaving(false);
     }
@@ -297,6 +299,9 @@ export default function LogTripScreen() {
               </Card>
             )}
 
+            {formError ? (
+              <Text style={styles.formError}>{formError}</Text>
+            ) : null}
             <PrimaryButton
               label={saving ? 'Saving…' : editingId ? 'Save Trip Changes' : '+ Log This Trip'}
               onPress={handleSubmit}
@@ -448,5 +453,13 @@ const styles = StyleSheet.create({
   tripGross: { fontSize: 13, fontWeight: '700', color: colors.accent },
   tripNet: { fontSize: 11, fontWeight: '600', marginTop: 2 },
   histCount: { fontSize: 12, color: colors.muted, marginBottom: 10 },
+  formError: {
+    color: colors.danger,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 8,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
   deleteHint: { textAlign: 'center', color: colors.muted, fontSize: 11, marginTop: 10 },
 });
