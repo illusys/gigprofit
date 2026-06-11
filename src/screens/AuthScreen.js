@@ -11,9 +11,11 @@ WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
 
-export default function AuthScreen() {
+export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
   const { login, loginWithGoogle, register } = useApp();
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(initialMode);
+
+  useEffect(() => { setMode(initialMode); }, [initialMode]);
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });
@@ -65,9 +67,14 @@ export default function AuthScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      {onBackToLanding && (
+        <TouchableOpacity style={styles.backBtn} onPress={onBackToLanding} activeOpacity={0.7}>
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+      )}
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.logo}>Gigs<Text style={{ color: colors.accent }}>Profit</Text></Text>
-        <Text style={styles.sub}>Multi-user profitability intelligence for gig drivers</Text>
+        <Text style={styles.sub}>{mode === 'register' ? 'Create your free account' : 'Welcome back'}</Text>
 
         <Card>
           <SectionTitle>{mode === 'login' ? 'Sign In' : 'Create Account'}</SectionTitle>
@@ -130,6 +137,8 @@ function Field(props) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  backBtn: { paddingHorizontal: spacing.md, paddingVertical: 12 },
+  backText: { color: colors.accent, fontWeight: '700', fontSize: 14 },
   content: { padding: spacing.md, justifyContent: 'center', flexGrow: 1 },
   logo: { fontSize: 40, fontWeight: '900', color: colors.text, textAlign: 'center' },
   sub: { color: colors.muted, textAlign: 'center', marginBottom: 24, fontSize: 13, lineHeight: 19 },

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBar, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,6 +15,7 @@ import AnalyticsScreen from './src/screens/AnalyticsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import AdminScreen from './src/screens/AdminScreen';
+import LandingScreen from './src/screens/LandingScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -28,8 +29,26 @@ const TAB_ICONS = {
 
 function AppNavigator() {
   const { loading, user, isAdmin } = useApp();
+  const [authView, setAuthView] = useState('landing');
+
   if (loading) return <LoadingScreen />;
-  if (!user) return <AuthScreen />;
+
+  if (!user) {
+    if (authView === 'landing') {
+      return (
+        <LandingScreen
+          onGetStarted={() => setAuthView('register')}
+          onSignIn={() => setAuthView('login')}
+        />
+      );
+    }
+    return (
+      <AuthScreen
+        initialMode={authView === 'register' ? 'register' : 'login'}
+        onBackToLanding={() => setAuthView('landing')}
+      />
+    );
+  }
 
   return (
     <Tab.Navigator
