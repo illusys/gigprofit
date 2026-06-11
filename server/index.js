@@ -17,7 +17,14 @@ app.use(securityMiddleware());
 app.use(express.json({ limit: '1mb' }));
 app.use(csrfProtection);
 
+// Prevent browser caching of API responses so new data is always fetched
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
+
 app.get('/health', (req, res) => res.json({ ok: true, service: 'gigprofit-api' }));
+app.get('/api/health', (req, res) => res.json({ ok: true, service: 'gigprofit-api' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/reports', reportRoutes);

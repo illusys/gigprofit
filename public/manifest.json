@@ -1,0 +1,14 @@
+{
+  "short_name": "GigsProfit",
+  "name": "GigsProfit — Real Profit for Gig Drivers",
+  "description": "Calculate your real take-home pay after all costs across Uber, DoorDash, Lyft, and more.",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#00e5a0",
+  "background_color": "#0a0c10",
+  "orientation": "portrait"
+}

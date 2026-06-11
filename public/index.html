@@ -255,6 +255,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://www.googletagmanager.com" />
     <link rel="preconnect" href="https://connect.facebook.net" />
+
+    <!-- Vercel Web Analytics — served automatically when enabled in Vercel dashboard -->
+    <script defer src="/_vercel/insights/script.js"></script>
+
+    <!-- Ensure dark background before JS loads; prevent white flash -->
+    <style>
+      html, body { margin: 0; padding: 0; background: #0a0c10; height: 100%; }
+      #root { display: flex; flex: 1; height: 100%; }
+    </style>
   </head>
 
   <body>
