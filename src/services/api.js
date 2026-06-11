@@ -1,7 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'web' ? 'http://localhost:4000/api' : 'http://10.0.2.2:4000/api');
+// On web production (Vercel), the API lives on the same domain at /api.
+// On native or local dev, fall back to the configured URL or localhost.
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL
+  || (Platform.OS === 'web' ? '/api' : 'http://10.0.2.2:4000/api');
 const TOKEN_KEY = '@gigprofit_access_token';
 const REFRESH_KEY = '@gigprofit_refresh_token';
 
