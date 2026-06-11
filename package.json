@@ -10,9 +10,11 @@
     "server": "node server/index.js",
     "test": "node --test server/tests/*.test.js",
     "lint": "node --check server/index.js && node --check server/services/profitService.js && node --check server/services/validationService.js",
-    "prisma:generate": "prisma generate --schema server/prisma/schema.prisma",
-    "prisma:migrate": "prisma migrate dev --schema server/prisma/schema.prisma",
-    "prisma:seed": "node server/prisma/seed.js"
+    "prisma:generate": "./node_modules/.bin/prisma generate --schema server/prisma/schema.prisma",
+    "prisma:migrate": "./node_modules/.bin/prisma migrate dev --schema server/prisma/schema.prisma",
+    "prisma:migrate:deploy": "./node_modules/.bin/prisma migrate deploy --schema server/prisma/schema.prisma",
+    "prisma:seed": "node server/prisma/seed.js",
+    "prisma:studio": "./node_modules/.bin/prisma studio --schema server/prisma/schema.prisma"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
