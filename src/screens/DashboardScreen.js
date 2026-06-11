@@ -26,7 +26,7 @@ import {
 const PERIODS = ['day', 'week', 'month', 'year'];
 
 export default function DashboardScreen() {
-  const { trips, vehicle, taxSettings, period, setPeriod } = useApp();
+  const { trips, vehicle, taxSettings, period, setPeriod, user } = useApp();
   const [aiTip, setAiTip] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -87,9 +87,13 @@ Gig driver weekly stats:
       <View style={styles.header}>
         <View>
           <Text style={styles.logo}>
-            Gig<Text style={{ color: colors.accent }}>Profit</Text>
+            Gigs<Text style={{ color: colors.accent }}>Profit</Text>
           </Text>
-          <Text style={styles.logoSub}>EARNINGS INTELLIGENCE</Text>
+          {user ? (
+            <Text style={styles.logoSub}>Hey, {user.firstName} 👋</Text>
+          ) : (
+            <Text style={styles.logoSub}>EARNINGS INTELLIGENCE</Text>
+          )}
         </View>
         <View style={[styles.netBadge, { borderColor: netColor }]}>
           <Text style={styles.netLabel}>NET</Text>

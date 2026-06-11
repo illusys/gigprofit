@@ -154,4 +154,48 @@ async function changePassword(user, currentPassword, nextPassword, context = {})
   return { ok: true };
 }
 
-module.exports = { register, login, refresh, logout, logoutAll, requestPasswordReset, resetPassword, changePassword, sanitizeUser, normalizeEmail, assertEmail };
+async function googleLogin(idToken, context = {}) {
+  const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+  const info = await response.json();
+  if (!response.ok || !info.sub) {
+    const err = new Error('Invalid Google token.');
+    err.status = 401;
+    throw err;
+  }
+  const email = normalizeEmail(info.email);
+  if (!email) {
+    const err = new Error('Google account has no email.');
+    err.status = 400;
+    throw err;
+  }
+  let user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        firstName: info.given_name || info.name?.split(' ')[0] || 'User',
+        lastName: info.family_name || info.name?.split(' ').slice(1).join(' ') || '',
+        email,
+        passwordHash: '',
+        status: 'ACTIVE',
+        role: 'USER',
+        profile: { create: { vehicleSettings: {}, preferences: {}, notificationSettings: {}, taxSettings: {} } },
+      },
+    });
+    await logAudit({ actorId: user.id, action: 'USER_CREATED_GOOGLE', entityType: 'User', entityId: user.id, ipAddress: context.ipAddress });
+  }
+  if (user.status === 'SUSPENDED') {
+    const err = new Error('Account is suspended.');
+    err.status = 403;
+    throw err;
+  }
+  if (user.status === 'DELETED') {
+    const err = new Error('Account not found.');
+    err.status = 401;
+    throw err;
+  }
+  const updated = await prisma.user.update({ where: { id: user.id }, data: { lastLogin: new Date(), status: 'ACTIVE' } });
+  await logAudit({ actorId: updated.id, action: 'USER_LOGIN_GOOGLE', entityType: 'User', entityId: updated.id, ipAddress: context.ipAddress });
+  return issueSession(updated, context);
+}
+
+module.exports = { register, login, googleLogin, refresh, logout, logoutAll, requestPasswordReset, resetPassword, changePassword, sanitizeUser, normalizeEmail, assertEmail };

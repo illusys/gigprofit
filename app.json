@@ -13,9 +13,9 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gigprofit.app",
+      "bundleIdentifier": "com.gigsprofit.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "GigProfit uses your location to track mileage automatically."
+        "NSLocationWhenInUseUsageDescription": "GigsProfit uses your location to track mileage automatically."
       }
     },
     "android": {
@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0c10"
       },
-      "package": "com.gigprofit.app",
+      "package": "com.gigsprofit.app",
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {

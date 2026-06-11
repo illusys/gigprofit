@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: gigprofit-api
+    runtime: node
+    buildCommand: npm install && npm run prisma:generate
+    startCommand: npm run prisma:migrate:deploy && node server/index.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGINS
+        value: https://gigsprofit.com
+      - key: RATE_LIMIT
+        value: 300
