@@ -5,52 +5,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../context/LanguageContext';
 import { colors, spacing, radius } from '../utils/theme';
 
-const FEATURES = [
-  { icon: 'calculator-outline', color: '#00e5a0', title: 'Real profit, not just earnings', body: 'Deducts fuel, depreciation, insurance, tires, oil, and maintenance on every trip.' },
-  { icon: 'analytics-outline', color: '#7c6aff', title: 'Compare every platform', body: 'Ranks Uber, Lyft, DoorDash, and more by actual net $/hr — not gross.' },
-  { icon: 'receipt-outline', color: '#ff6b35', title: 'Tax snapshot built in', body: 'Self-employment tax + IRS mileage deduction calculated automatically.' },
-  { icon: 'flash-outline', color: '#ffb830', title: 'AI profit coach', body: 'Claude AI gives you 2 specific actions to improve your numbers this week.' },
-];
-
-const TESTIMONIALS = [
-  {
-    quote: 'I thought DoorDash was my best earner. Turns out Uber nets me $4 more per hour after costs.',
-    name: 'Marcus T.',
-    location: 'Dallas TX',
-  },
-  {
-    quote: 'Found out my cost per mile was $0.94. I was barely breaking even on short trips. Now I decline anything under 4 miles.',
-    name: 'Priya S.',
-    location: 'Austin TX',
-  },
-];
-
-const FAQS = [
-  {
-    q: 'Which gig platform pays the most after expenses?',
-    a: 'It depends on your location and vehicle. Amazon Flex tends to yield high net pay because deliveries are batched. GigsProfit lets you compare real net dollars per hour across every platform so you can decide which shifts are actually worth it.',
-  },
-  {
-    q: 'What is the IRS mileage deduction for 2026?',
-    a: 'The IRS standard mileage rate for 2026 is $0.72 per mile for business use. A driver who logs 25,000 miles per year deducts $18,000 — often wiping out most of the self-employment tax bill. GigsProfit tracks this automatically.',
-  },
-  {
-    q: 'How much do gig drivers pay in self-employment tax?',
-    a: 'Gig drivers pay 15.3% self-employment tax on net profit — 12.4% Social Security and 2.9% Medicare. For a driver netting $2,000 per month, that\'s $306 per month in SE tax alone, before income tax. GigsProfit shows your running estimate.',
-  },
-  {
-    q: 'Does GigsProfit work for Instacart, Amazon Flex and Shipt?',
-    a: 'Yes. GigsProfit supports Uber, Lyft, DoorDash, Instacart, Amazon Flex, Grubhub, Uber Eats, and Shipt. Log any trip on any platform and compare real profit side by side.',
-  },
-  {
-    q: 'Is GigsProfit free to use?',
-    a: 'GigsProfit is completely free. No subscription, no credit card. Sign up, set your vehicle costs once, and start seeing your real profit immediately.',
-  },
+const FEATURE_ICONS = [
+  { icon: 'calculator-outline', color: '#00e5a0', tk: 'landing_feature1' },
+  { icon: 'analytics-outline', color: '#7c6aff', tk: 'landing_feature2' },
+  { icon: 'receipt-outline', color: '#ff6b35', tk: 'landing_feature3' },
+  { icon: 'flash-outline', color: '#ffb830', tk: 'landing_feature4' },
 ];
 
 export default function LandingScreen({ onGetStarted, onSignIn }) {
+  const { t, isRTL } = useLanguage();
+
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.title = 'GigsProfit — Real Profit Calculator for Gig Drivers';
@@ -81,16 +48,39 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
     outputRange: [colors.accent, '#7c6aff'],
   });
 
+  const rtl = isRTL ? { flexDirection: 'row-reverse' } : {};
+  const textAlign = isRTL ? 'right' : 'center';
+  const textAlignLeft = isRTL ? 'right' : 'left';
+
+  const STATS = [
+    { value: t('landing_stat1_value'), label: t('landing_stat1_label'), color: '#00e5a0' },
+    { value: t('landing_stat2_value'), label: t('landing_stat2_label'), color: '#7c6aff' },
+    { value: t('landing_stat3_value'), label: t('landing_stat3_label'), color: '#ff6b35' },
+  ];
+
+  const TESTIMONIALS = [
+    { quote: t('landing_testimonial1_quote'), name: t('landing_testimonial1_name'), location: t('landing_testimonial1_location') },
+    { quote: t('landing_testimonial2_quote'), name: t('landing_testimonial2_name'), location: t('landing_testimonial2_location') },
+  ];
+
+  const FAQS = [
+    { q: t('landing_faq1_q'), a: t('landing_faq1_a') },
+    { q: t('landing_faq2_q'), a: t('landing_faq2_a') },
+    { q: t('landing_faq3_q'), a: t('landing_faq3_a') },
+    { q: t('landing_faq4_q'), a: t('landing_faq4_a') },
+    { q: t('landing_faq5_q'), a: t('landing_faq5_a') },
+  ];
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       {/* Nav */}
-      <View style={styles.nav}>
+      <View style={[styles.nav, rtl]}>
         <Text style={styles.navLogo}>
           <Text style={{ color: colors.text }}>Gigs</Text>
           <Text style={{ color: colors.accent }}>Profit</Text>
         </Text>
         <TouchableOpacity style={styles.navSignIn} onPress={onSignIn} activeOpacity={0.8}>
-          <Text style={styles.navSignInText}>Sign in</Text>
+          <Text style={styles.navSignInText}>{t('landing_nav_signin')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -98,67 +88,63 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
 
         {/* Hero */}
         <Animated.View style={[styles.hero, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          <Text style={styles.heroHead}>Your gross pay</Text>
-          <Animated.Text style={[styles.heroHeadItalic, { color: pulseColor }]}>
-            isn't your income.
+          <Text style={[styles.heroHead, { textAlign }]}>{t('landing_hero_head')}</Text>
+          <Animated.Text style={[styles.heroHeadItalic, { color: pulseColor, textAlign }]}>
+            {t('landing_hero_italic')}
           </Animated.Text>
-          <Text style={styles.heroSub}>
-            GigsProfit calculates your real take-home pay after fuel, mileage at the IRS rate of $0.72 per mile, vehicle maintenance, and self-employment tax. DoorDash drivers earn $12.23 per hour on average gross — but real net pay after costs is 35–45% lower. GigsProfit shows you the actual number for every trip.
+          <Text style={[styles.heroSub, { textAlign }]}>
+            {t('landing_hero_sub')}
           </Text>
           <TouchableOpacity style={styles.heroCta} onPress={onGetStarted} activeOpacity={0.85}>
-            <Text style={styles.heroCtaText}>Start tracking for free</Text>
+            <Text style={styles.heroCtaText}>{t('landing_cta_start')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.heroSecondary} onPress={onSignIn} activeOpacity={0.7}>
-            <Text style={styles.heroSecondaryText}>Sign in →</Text>
+            <Text style={styles.heroSecondaryText}>{t('landing_signin_arrow')}</Text>
           </TouchableOpacity>
         </Animated.View>
 
         {/* Stats strip */}
         <View style={styles.statsStrip}>
-          {[
-            { value: '$0.72', label: 'IRS mileage rate per mile (2026)', color: '#00e5a0' },
-            { value: '9', label: 'cost categories tracked per trip', color: '#7c6aff' },
-            { value: '35–45%', label: 'what expenses cut from gross pay', color: '#ff6b35' },
-          ].map((s, i) => (
-            <View key={s.label} style={[styles.statCol, i > 0 && styles.statColBorder]}>
+          {STATS.map((s, i) => (
+            <View key={i} style={[styles.statCol, i > 0 && styles.statColBorder]}>
               <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+              <Text style={[styles.statLabel, { textAlign }]}>{s.label}</Text>
             </View>
           ))}
         </View>
 
         {/* Problem */}
         <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>THE REAL MATH</Text>
-          <Text style={styles.sectionHead}>Apps show what you earned.{'\n'}We show what you made.</Text>
-          <View style={styles.compareRow}>
+          <Text style={[styles.sectionEyebrow, { textAlign: textAlignLeft }]}>{t('landing_problem_eyebrow')}</Text>
+          <Text style={[styles.sectionHead, { textAlign: textAlignLeft }]}>{t('landing_problem_head')}</Text>
+          <View style={[styles.compareRow, rtl]}>
             <View style={styles.compareCardNeutral}>
-              <Text style={styles.compareLabel}>Gross earnings</Text>
+              <Text style={styles.compareLabel}>{t('landing_compare_gross')}</Text>
               <Text style={styles.compareValueNeutral}>$847</Text>
             </View>
             <View style={styles.compareCardReal}>
-              <Text style={styles.compareLabel}>Real take-home</Text>
+              <Text style={styles.compareLabel}>{t('landing_compare_real')}</Text>
               <Text style={styles.compareValueReal}>$491</Text>
             </View>
           </View>
           <View style={styles.compareNote}>
-            <Text style={styles.compareNoteText}>
-              GridWise Analytics reports DoorDash drivers earn $12.23/hr gross. After costs, real take-home is often under $8/hr. GigsProfit shows your number.
+            <Text style={[styles.compareNoteText, { textAlign: textAlignLeft }]}>
+              {t('landing_compare_note')}
             </Text>
           </View>
         </View>
 
         {/* Features */}
         <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>WHAT GIGSPROFIT DOES</Text>
-          {FEATURES.map((f) => (
-            <View key={f.title} style={styles.featureRow}>
+          <Text style={[styles.sectionEyebrow, { textAlign: textAlignLeft }]}>{t('landing_features_eyebrow')}</Text>
+          {FEATURE_ICONS.map((f) => (
+            <View key={f.tk} style={[styles.featureRow, rtl]}>
               <View style={[styles.featureIcon, { backgroundColor: f.color + '18', borderColor: f.color + '30' }]}>
                 <Ionicons name={f.icon} size={22} color={f.color} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.featureTitle}>{f.title}</Text>
-                <Text style={styles.featureBody}>{f.body}</Text>
+                <Text style={[styles.featureTitle, { textAlign: textAlignLeft }]}>{t(`${f.tk}_title`)}</Text>
+                <Text style={[styles.featureBody, { textAlign: textAlignLeft }]}>{t(`${f.tk}_body`)}</Text>
               </View>
             </View>
           ))}
@@ -166,18 +152,18 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
 
         {/* Testimonials */}
         <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>FROM DRIVERS USING IT</Text>
-          {TESTIMONIALS.map((t) => (
-            <View key={t.name} style={styles.testimonialCard}>
+          <Text style={[styles.sectionEyebrow, { textAlign: textAlignLeft }]}>{t('landing_testimonials_eyebrow')}</Text>
+          {TESTIMONIALS.map((item) => (
+            <View key={item.name} style={styles.testimonialCard}>
               <Text style={styles.testimonialQuoteMark}>"</Text>
-              <Text style={styles.testimonialQuote}>{t.quote}</Text>
-              <View style={styles.testimonialAuthorRow}>
+              <Text style={[styles.testimonialQuote, { textAlign: textAlignLeft }]}>{item.quote}</Text>
+              <View style={[styles.testimonialAuthorRow, rtl]}>
                 <View style={styles.testimonialAvatar}>
-                  <Text style={styles.testimonialAvatarText}>{t.name[0]}</Text>
+                  <Text style={styles.testimonialAvatarText}>{item.name[0]}</Text>
                 </View>
                 <View>
-                  <Text style={styles.testimonialName}>{t.name}</Text>
-                  <Text style={styles.testimonialLocation}>{t.location}</Text>
+                  <Text style={[styles.testimonialName, { textAlign: textAlignLeft }]}>{item.name}</Text>
+                  <Text style={[styles.testimonialLocation, { textAlign: textAlignLeft }]}>{item.location}</Text>
                 </View>
               </View>
             </View>
@@ -186,8 +172,8 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
 
         {/* FAQ accordion */}
         <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>QUESTIONS GIG DRIVERS ASK</Text>
-          <Text style={styles.sectionHead}>Real answers for Uber, DoorDash, Lyft, Instacart and Amazon Flex drivers</Text>
+          <Text style={[styles.sectionEyebrow, { textAlign: textAlignLeft }]}>{t('landing_faq_eyebrow')}</Text>
+          <Text style={[styles.sectionHead, { textAlign: textAlignLeft }]}>{t('landing_faq_head')}</Text>
           {FAQS.map((item, i) => {
             const open = openFaq === i;
             return (
@@ -197,15 +183,15 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
                 onPress={() => setOpenFaq(open ? null : i)}
                 activeOpacity={0.8}
               >
-                <View style={styles.faqHeader}>
-                  <Text style={styles.faqQuestion}>{item.q}</Text>
+                <View style={[styles.faqHeader, rtl]}>
+                  <Text style={[styles.faqQuestion, { textAlign: textAlignLeft }]}>{item.q}</Text>
                   <Ionicons
                     name={open ? 'chevron-up' : 'chevron-down'}
                     size={18}
                     color={colors.accent}
                   />
                 </View>
-                {open && <Text style={styles.faqAnswer}>{item.a}</Text>}
+                {open && <Text style={[styles.faqAnswer, { textAlign: textAlignLeft }]}>{item.a}</Text>}
               </TouchableOpacity>
             );
           })}
@@ -213,24 +199,20 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
 
         {/* Final CTA */}
         <View style={styles.finalCta}>
-          <Text style={styles.finalHead}>Know your real number.</Text>
-          <Text style={styles.finalSub}>Free to use. No subscription required.</Text>
+          <Text style={[styles.finalHead, { textAlign }]}>{t('landing_final_head')}</Text>
+          <Text style={[styles.finalSub, { textAlign }]}>{t('landing_final_sub')}</Text>
           <TouchableOpacity style={styles.heroCta} onPress={onGetStarted} activeOpacity={0.85}>
-            <Text style={styles.heroCtaText}>Create free account</Text>
+            <Text style={styles.heroCtaText}>{t('landing_cta_create')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.heroSecondary} onPress={onSignIn} activeOpacity={0.7}>
-            <Text style={styles.heroSecondaryText}>Sign in to existing account →</Text>
+            <Text style={styles.heroSecondaryText}>{t('landing_signin_existing')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Works with Uber, Lyft, DoorDash, Instacart, Amazon Flex, and any other platform.
-          </Text>
-          <Text style={styles.footerDisclaimer}>
-            Tax estimates are for informational purposes only. Consult a tax professional for advice specific to your situation.
-          </Text>
+          <Text style={[styles.footerText, { textAlign }]}>{t('landing_footer_platforms')}</Text>
+          <Text style={[styles.footerDisclaimer, { textAlign }]}>{t('landing_footer_disclaimer')}</Text>
         </View>
 
       </ScrollView>
@@ -242,7 +224,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   scroll: { paddingBottom: 32 },
 
-  // Nav
   nav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -262,7 +243,6 @@ const styles = StyleSheet.create({
   },
   navSignInText: { color: colors.text, fontWeight: '700', fontSize: 13 },
 
-  // Hero
   hero: {
     paddingHorizontal: spacing.lg,
     paddingTop: 48,
@@ -308,7 +288,6 @@ const styles = StyleSheet.create({
   heroSecondary: { paddingVertical: 8 },
   heroSecondaryText: { color: colors.accent, fontWeight: '700', fontSize: 14 },
 
-  // Stats
   statsStrip: {
     flexDirection: 'row',
     borderTopWidth: 1,
@@ -326,7 +305,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   statLabel: { fontSize: 10, color: colors.muted, textAlign: 'center', marginTop: 4, lineHeight: 14 },
 
-  // Sections
   section: {
     paddingHorizontal: spacing.md,
     paddingVertical: 36,
@@ -349,7 +327,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
-  // Compare
   compareRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   compareCardNeutral: {
     flex: 1,
@@ -379,7 +356,6 @@ const styles = StyleSheet.create({
   },
   compareNoteText: { color: colors.textSub, fontSize: 13, fontWeight: '500', lineHeight: 20 },
 
-  // Features
   featureRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -397,7 +373,6 @@ const styles = StyleSheet.create({
   featureTitle: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 3 },
   featureBody: { fontSize: 13, color: colors.muted, lineHeight: 19 },
 
-  // Testimonials
   testimonialCard: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -423,7 +398,6 @@ const styles = StyleSheet.create({
   testimonialName: { color: colors.text, fontWeight: '700', fontSize: 13 },
   testimonialLocation: { color: colors.muted, fontSize: 11 },
 
-  // FAQ
   faqItem: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -441,7 +415,6 @@ const styles = StyleSheet.create({
   faqQuestion: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text, lineHeight: 20 },
   faqAnswer: { fontSize: 13, color: colors.muted, lineHeight: 20, marginTop: 12 },
 
-  // Final CTA
   finalCta: {
     paddingHorizontal: spacing.lg,
     paddingVertical: 48,
@@ -464,7 +437,6 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
 
-  // Footer
   footer: {
     paddingHorizontal: spacing.md,
     paddingVertical: 24,

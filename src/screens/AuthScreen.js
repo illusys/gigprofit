@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { useApp } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 import { colors, spacing, radius } from '../utils/theme';
 import { Card, PrimaryButton, SectionTitle, Row } from '../components/UI';
 
@@ -13,6 +14,7 @@ const GOOGLE_WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
   const { login, loginWithGoogle, register } = useApp();
+  const { t, isRTL } = useLanguage();
   const [mode, setMode] = useState(initialMode);
   const [authError, setAuthError] = useState('');
 
@@ -98,43 +100,45 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
   }
 
   const googleDisabled = !GOOGLE_WEB_CLIENT_ID || !request || googleLoading;
+  const rtl = isRTL ? { flexDirection: 'row-reverse' } : {};
+  const textAlign = isRTL ? 'right' : 'left';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       {onBackToLanding && (
         <TouchableOpacity style={styles.backBtn} onPress={onBackToLanding} activeOpacity={0.7}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>{t('auth_back')}</Text>
         </TouchableOpacity>
       )}
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.logo}>Gigs<Text style={{ color: colors.accent }}>Profit</Text></Text>
-        <Text style={styles.sub}>{mode === 'register' ? 'Create your free account' : 'Welcome back'}</Text>
+        <Text style={styles.sub}>{mode === 'register' ? t('auth_create_free') : t('auth_welcome_back')}</Text>
 
         <Card>
-          <SectionTitle>{mode === 'login' ? 'Sign In' : 'Create Account'}</SectionTitle>
+          <SectionTitle>{mode === 'login' ? t('auth_signin_title') : t('auth_register_title')}</SectionTitle>
 
           {mode === 'register' && (
-            <Row style={{ gap: 8 }}>
-              <Field placeholder="First name" value={form.firstName} onChangeText={(v) => setField('firstName', v)} />
-              <Field placeholder="Last name" value={form.lastName} onChangeText={(v) => setField('lastName', v)} />
+            <Row style={[{ gap: 8 }, rtl]}>
+              <Field placeholder={t('auth_first_name')} value={form.firstName} onChangeText={(v) => setField('firstName', v)} textAlign={textAlign} />
+              <Field placeholder={t('auth_last_name')} value={form.lastName} onChangeText={(v) => setField('lastName', v)} textAlign={textAlign} />
             </Row>
           )}
-          <Field placeholder="Email" value={form.email} onChangeText={(v) => setField('email', v)} autoCapitalize="none" keyboardType="email-address" />
+          <Field placeholder={t('auth_email')} value={form.email} onChangeText={(v) => setField('email', v)} autoCapitalize="none" keyboardType="email-address" textAlign={textAlign} />
           {mode === 'register' && (
-            <Field placeholder="Phone (optional)" value={form.phone} onChangeText={(v) => setField('phone', v)} keyboardType="phone-pad" />
+            <Field placeholder={t('auth_phone')} value={form.phone} onChangeText={(v) => setField('phone', v)} keyboardType="phone-pad" textAlign={textAlign} />
           )}
-          <Field placeholder="Password" value={form.password} onChangeText={(v) => setField('password', v)} secureTextEntry />
+          <Field placeholder={t('auth_password')} value={form.password} onChangeText={(v) => setField('password', v)} secureTextEntry textAlign={textAlign} />
           {mode === 'register' && (
-            <Field placeholder="Confirm password" value={form.confirmPassword} onChangeText={(v) => setField('confirmPassword', v)} secureTextEntry />
+            <Field placeholder={t('auth_confirm_password')} value={form.confirmPassword} onChangeText={(v) => setField('confirmPassword', v)} secureTextEntry textAlign={textAlign} />
           )}
 
-          <PrimaryButton label={mode === 'login' ? 'Sign In' : 'Register'} onPress={submit} loading={busy} />
+          <PrimaryButton label={mode === 'login' ? t('auth_btn_signin') : t('auth_btn_register')} onPress={submit} loading={busy} />
 
           {authError ? <Text style={styles.authError}>{authError}</Text> : null}
 
-          <Row style={styles.dividerRow}>
+          <Row style={[styles.dividerRow, rtl]}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
+            <Text style={styles.dividerText}>{t('auth_or')}</Text>
             <View style={styles.dividerLine} />
           </Row>
 
@@ -150,19 +154,17 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
               <Text style={styles.googleG}>G</Text>
             )}
             <Text style={styles.googleText}>
-              {googleLoading ? 'Signing in with Google…' : 'Continue with Google'}
+              {googleLoading ? t('auth_google_loading') : t('auth_google')}
             </Text>
           </TouchableOpacity>
 
           {!GOOGLE_WEB_CLIENT_ID && (
-            <Text style={styles.configNote}>
-              Google sign-in requires EXPO_PUBLIC_GOOGLE_CLIENT_ID to be configured.
-            </Text>
+            <Text style={styles.configNote}>{t('auth_google_config_note')}</Text>
           )}
 
           <TouchableOpacity style={styles.switch} onPress={() => { setMode(mode === 'login' ? 'register' : 'login'); setAuthError(''); }}>
             <Text style={styles.switchText}>
-              {mode === 'login' ? "Don't have an account? Register" : 'Already have an account? Sign in'}
+              {mode === 'login' ? t('auth_no_account') : t('auth_have_account')}
             </Text>
           </TouchableOpacity>
         </Card>
@@ -171,8 +173,8 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
   );
 }
 
-function Field(props) {
-  return <TextInput {...props} placeholderTextColor={colors.muted} style={[styles.input, props.style]} />;
+function Field({ textAlign, ...props }) {
+  return <TextInput {...props} placeholderTextColor={colors.muted} style={[styles.input, textAlign && { textAlign }, props.style]} />;
 }
 
 const styles = StyleSheet.create({

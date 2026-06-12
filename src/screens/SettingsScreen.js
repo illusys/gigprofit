@@ -6,13 +6,15 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Switch,
+  Modal,
   Alert,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
+import { LANGUAGES } from '../i18n/translations';
 import { tripCost, totalCost, fmt, DEFAULT_TAX_SETTINGS, defaultVehicle } from '../utils/calculations';
 import { colors, spacing, radius } from '../utils/theme';
 import { Card, SectionTitle, PrimaryButton, GhostButton, Divider, Row } from '../components/UI';
@@ -37,7 +39,10 @@ export default function SettingsScreen() {
   }, []);
 
   const { user, vehicle, taxSettings, setVehicle, setTaxSettings, trips, clearAllData, logout } = useApp();
+  const { t, language, setLanguage } = useLanguage();
   const [saving, setSaving] = useState(false);
+  const [langModalVisible, setLangModalVisible] = useState(false);
+  const currentLang = LANGUAGES.find((l) => l.code === language) || LANGUAGES[0];
 
   function adjust(key, delta) {
     const field = FIELDS.find((f) => f.key === key);
@@ -212,6 +217,47 @@ export default function SettingsScreen() {
           </Row>
         </Card>
 
+        {/* Language */}
+        <Card>
+          <SectionTitle>{t('settings_language')}</SectionTitle>
+          <TouchableOpacity style={styles.langRow} onPress={() => setLangModalVisible(true)} activeOpacity={0.8}>
+            <Row style={{ gap: 10, flex: 1 }}>
+              <Text style={{ fontSize: 22 }}>{currentLang.flag}</Text>
+              <View>
+                <Text style={styles.langLabel}>{currentLang.nativeLabel}</Text>
+                <Text style={styles.langSub}>{currentLang.label}</Text>
+              </View>
+            </Row>
+            <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+          </TouchableOpacity>
+        </Card>
+
+        <Modal visible={langModalVisible} transparent animationType="fade" onRequestClose={() => setLangModalVisible(false)}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setLangModalVisible(false)}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>{t('settings_language_pick')}</Text>
+              {LANGUAGES.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code}
+                  style={[styles.modalOption, lang.code === language && styles.modalOptionActive]}
+                  onPress={() => { setLanguage(lang.code); setLangModalVisible(false); }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ fontSize: 22 }}>{lang.flag}</Text>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.modalOptionNative}>{lang.nativeLabel}</Text>
+                    <Text style={styles.modalOptionSub}>{lang.label}</Text>
+                  </View>
+                  {lang.code === language && <Ionicons name="checkmark-circle" size={20} color={colors.accent} />}
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity style={styles.modalDone} onPress={() => setLangModalVisible(false)}>
+                <Text style={styles.modalDoneText}>{t('settings_language_done')}</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
         {/* Actions */}
         <GhostButton label="Reset Vehicle Defaults" onPress={handleReset} style={{ marginBottom: 8 }} />
         {user ? <GhostButton label="Logout" onPress={logout} style={{ marginBottom: 8 }} /> : null}
@@ -274,4 +320,16 @@ const styles = StyleSheet.create({
   dataStat: { fontSize: 20, fontWeight: '900', color: colors.text },
   dataLabel: { fontSize: 10, color: colors.muted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.8 },
   aboutText: { fontSize: 13, color: colors.muted, lineHeight: 20 },
+  langRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  langLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
+  langSub: { fontSize: 11, color: colors.muted, marginTop: 2 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: spacing.md },
+  modalBox: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: 20, width: '100%', maxWidth: 360 },
+  modalTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 16, textAlign: 'center' },
+  modalOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12, borderRadius: radius.md, marginBottom: 6, backgroundColor: colors.surface2 },
+  modalOptionActive: { borderWidth: 1, borderColor: colors.accent },
+  modalOptionNative: { fontSize: 15, fontWeight: '700', color: colors.text },
+  modalOptionSub: { fontSize: 11, color: colors.muted, marginTop: 2 },
+  modalDone: { marginTop: 8, paddingVertical: 13, backgroundColor: colors.accent, borderRadius: radius.md, alignItems: 'center' },
+  modalDoneText: { color: '#000', fontWeight: '800', fontSize: 14 },
 });
