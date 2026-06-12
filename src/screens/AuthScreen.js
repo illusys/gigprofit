@@ -71,8 +71,14 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
     try {
       if (mode === 'login') {
         await login({ email: form.email, password: form.password });
+        if (typeof window !== 'undefined' && window.dataLayer) {
+          window.dataLayer.push({ event: 'login', method: 'email' });
+        }
       } else {
         await register(form);
+        if (typeof window !== 'undefined' && window.dataLayer) {
+          window.dataLayer.push({ event: 'sign_up', method: 'email' });
+        }
         setMode('login');
         setAuthError('');
       }

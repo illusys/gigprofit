@@ -139,7 +139,12 @@ export default function LogTripScreen() {
         note: form.note,
       };
       if (editingId) await updateTrip(editingId, payload);
-      else await addTrip(payload);
+      else {
+        await addTrip(payload);
+        if (typeof window !== 'undefined' && window.dataLayer) {
+          window.dataLayer.push({ event: 'trip_logged', platform: form.platform });
+        }
+      }
       setForm({ date: today(), platform: form.platform, miles: '', hours: '', gross: '', tolls: '', parking: '', note: '' });
       setEditingId(null);
       setFormError('');
