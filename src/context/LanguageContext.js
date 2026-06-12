@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { I18nManager } from 'react-native';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { translations, RTL_LANGUAGES } from '../i18n/translations';
 
@@ -22,13 +22,23 @@ export function LanguageProvider({ children }) {
 
   function applyLanguage(code, persist = true) {
     const isRTL = RTL_LANGUAGES.includes(code);
-    if (I18nManager.isRTL !== isRTL) {
-      I18nManager.forceRTL(isRTL);
+
+    // On native only — I18nManager handles RTL layout on iOS/Android
+    if (Platform.OS !== 'web') {
+      try {
+        const { I18nManager } = require('react-native');
+        if (I18nManager && typeof I18nManager.forceRTL === 'function' && I18nManager.isRTL !== isRTL) {
+          I18nManager.forceRTL(isRTL);
+        }
+      } catch {}
     }
+
     setLanguageState(code);
     if (persist) {
       AsyncStorage.setItem(LANG_KEY, code);
     }
+
+    // On web — RTL is handled via HTML dir attribute and inline styles
     if (typeof document !== 'undefined') {
       document.documentElement.lang = code;
       document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
