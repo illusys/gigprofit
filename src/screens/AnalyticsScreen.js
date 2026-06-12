@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,12 @@ const EXPENSE_COLORS = {
 };
 
 export default function AnalyticsScreen() {
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = 'Analytics — GigsProfit';
+    }
+  }, []);
+
   const { trips, vehicle, taxSettings, period } = useApp();
 
   const stats = useMemo(

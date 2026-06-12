@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,12 @@ import {
 const PERIODS = ['day', 'week', 'month', 'year'];
 
 export default function DashboardScreen() {
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = 'Dashboard — GigsProfit';
+    }
+  }, []);
+
   const { trips, vehicle, taxSettings, period, setPeriod, user } = useApp();
   const [aiTip, setAiTip] = useState('');
   const [aiLoading, setAiLoading] = useState(false);

@@ -17,6 +17,14 @@ export default function AuthScreen({ initialMode = 'login', onBackToLanding }) {
   const [authError, setAuthError] = useState('');
 
   useEffect(() => { setMode(initialMode); setAuthError(''); }, [initialMode]);
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = mode === 'register'
+        ? 'Create Account — GigsProfit'
+        : 'Sign In — GigsProfit';
+    }
+  }, [mode]);
   const [busy, setBusy] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirmPassword: '' });

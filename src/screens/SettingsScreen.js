@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,12 @@ const FIELDS = [
 ];
 
 export default function SettingsScreen() {
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = 'Settings — GigsProfit';
+    }
+  }, []);
+
   const { user, vehicle, taxSettings, setVehicle, setTaxSettings, trips, clearAllData, logout } = useApp();
   const [saving, setSaving] = useState(false);
 

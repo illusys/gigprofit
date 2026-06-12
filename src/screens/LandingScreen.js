@@ -51,6 +51,12 @@ const FAQS = [
 ];
 
 export default function LandingScreen({ onGetStarted, onSignIn }) {
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = 'GigsProfit — Real Profit Calculator for Gig Drivers';
+    }
+  }, []);
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(24)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
@@ -58,8 +64,8 @@ export default function LandingScreen({ onGetStarted, onSignIn }) {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(fadeAnim, { toValue: 1, tension: 60, friction: 10, useNativeDriver: true }),
-      Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 10, useNativeDriver: true }),
+      Animated.spring(fadeAnim, { toValue: 1, tension: 60, friction: 10, useNativeDriver: false }),
+      Animated.spring(slideAnim, { toValue: 0, tension: 60, friction: 10, useNativeDriver: false }),
     ]).start();
 
     Animated.loop(

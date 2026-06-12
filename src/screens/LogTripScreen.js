@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -77,6 +77,12 @@ function DateInput({ value, onChange }) {
 }
 
 export default function LogTripScreen() {
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.title = 'Log a Trip — GigsProfit';
+    }
+  }, []);
+
   const { trips, vehicle, addTrip, updateTrip, deleteTrip } = useApp();
   const [tab, setTab] = useState('log'); // 'log' | 'history'
 
