@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBar, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { AppProvider, useApp } from './src/context/AppContext';
+import { LanguageProvider, useLanguage } from './src/context/LanguageContext';
 import { LoadingScreen } from './src/components/UI';
 import { colors } from './src/utils/theme';
 
@@ -15,6 +16,8 @@ import AnalyticsScreen from './src/screens/AnalyticsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import AuthScreen from './src/screens/AuthScreen';
 import AdminScreen from './src/screens/AdminScreen';
+import LandingScreen from './src/screens/LandingScreen';
+import LanguagePickerScreen from './src/screens/LanguagePickerScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -28,8 +31,29 @@ const TAB_ICONS = {
 
 function AppNavigator() {
   const { loading, user, isAdmin } = useApp();
+  const { language } = useLanguage();
+  const [authView, setAuthView] = useState('landing');
+
   if (loading) return <LoadingScreen />;
-  if (!user) return <AuthScreen />;
+
+  if (language === null) return <LanguagePickerScreen />;
+
+  if (!user) {
+    if (authView === 'landing') {
+      return (
+        <LandingScreen
+          onGetStarted={() => setAuthView('register')}
+          onSignIn={() => setAuthView('login')}
+        />
+      );
+    }
+    return (
+      <AuthScreen
+        initialMode={authView === 'register' ? 'register' : 'login'}
+        onBackToLanding={() => setAuthView('landing')}
+      />
+    );
+  }
 
   return (
     <Tab.Navigator
@@ -65,15 +89,23 @@ function AppNavigator() {
   );
 }
 
+function AppWithLanguage() {
+  return (
+    <NavigationContainer>
+      <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+      <AppNavigator />
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AppProvider>
-        <NavigationContainer>
-          <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
-          <AppNavigator />
-        </NavigationContainer>
-      </AppProvider>
+      <LanguageProvider>
+        <AppProvider>
+          <AppWithLanguage />
+        </AppProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }
